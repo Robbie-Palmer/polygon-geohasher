@@ -17,9 +17,11 @@ def readme():
 
 def requirements():
     with open("requirements.txt") as f:
-        return f.read()
+        return f.readlines()
 
 
+reqs = requirements()
+reqs.append('pygeohash @ git+https://github.com/wdm0006/pygeohash')
 setup(
     name="polygon-geohasher",
     version=get_version(),
@@ -30,7 +32,7 @@ setup(
     long_description=readme(),
     license="MIT",
     packages=find_packages(),
-    install_requires=requirements(),
+    install_requires=reqs,
     include_package_data=False,
     classifiers=[
         "Development Status :: 3 - Alpha",

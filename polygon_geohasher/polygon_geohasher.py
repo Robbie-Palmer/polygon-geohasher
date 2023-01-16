@@ -1,8 +1,14 @@
-import geohash
 import queue
+from typing import Generator
 
+import pygeohash
 from shapely import geometry
 from shapely.ops import cascaded_union
+
+
+def _neighbors(geohash: str) -> Generator[str, None, None]:
+    for direction in pygeohash.neighbor.NEIGHBORS.keys():
+        yield pygeohash.get_adjacent(geohash=geohash, direction=direction)
 
 
 def geohash_to_polygon(geo):
@@ -10,7 +16,7 @@ def geohash_to_polygon(geo):
     :param geo: String that represents the geohash.
     :return: Returns a Shapely's Polygon instance that represents the geohash.
     """
-    lat_centroid, lng_centroid, lat_offset, lng_offset = geohash.decode_exactly(geo)
+    lat_centroid, lng_centroid, lat_offset, lng_offset = pygeohash.decode_exactly(geo)
 
     corner_1 = (lat_centroid - lat_offset, lng_centroid - lng_offset)[::-1]
     corner_2 = (lat_centroid - lat_offset, lng_centroid + lng_offset)[::-1]
@@ -34,14 +40,14 @@ def polygon_to_geohashes(polygon, precision, inner=True):
     centroid = polygon.centroid
 
     testing_geohashes = queue.Queue()
-    testing_geohashes.put(geohash.encode(centroid.y, centroid.x, precision))
+    testing_geohashes.put(pygeohash.encode(centroid.y, centroid.x, precision))
 
     while not testing_geohashes.empty():
         current_geohash = testing_geohashes.get()
 
         if (
-            current_geohash not in inner_geohashes
-            and current_geohash not in outer_geohashes
+                current_geohash not in inner_geohashes
+                and current_geohash not in outer_geohashes
         ):
             current_polygon = geohash_to_polygon(current_geohash)
 
@@ -62,10 +68,10 @@ def polygon_to_geohashes(polygon, precision, inner=True):
                         inner_geohashes.add(current_geohash)
                     else:
                         outer_geohashes.add(current_geohash)
-                for neighbor in geohash.neighbors(current_geohash):
+                for neighbor in _neighbors(current_geohash):
                     if (
-                        neighbor not in inner_geohashes
-                        and neighbor not in outer_geohashes
+                            neighbor not in inner_geohashes
+                            and neighbor not in outer_geohashes
                     ):
                         testing_geohashes.put(neighbor)
 
