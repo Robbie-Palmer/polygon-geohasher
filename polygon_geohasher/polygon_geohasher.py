@@ -4,11 +4,12 @@ from typing import Generator
 import pygeohash
 from shapely import geometry
 from shapely.ops import cascaded_union
+from .neighbor import NEIGHBORS, get_adjacent
 
 
 def _neighbors(geohash: str) -> Generator[str, None, None]:
-    for direction in pygeohash.neighbor.NEIGHBORS.keys():
-        yield pygeohash.get_adjacent(geohash=geohash, direction=direction)
+    for direction in NEIGHBORS.keys():
+        yield get_adjacent(geohash=geohash, direction=direction)
 
 
 def geohash_to_polygon(geo):
